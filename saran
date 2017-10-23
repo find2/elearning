@@ -1,0 +1,36 @@
+-Dibuat dari Courses, lalu tampilkan reference, assignment, post dan quiz --> DONE
+-Penggantian nama post->discussion, Home->Post, Reference->Material
+-menu dikiri pada courses tampilkan kelas yang telah di enroll
+-diatas tampilkan reference, assignment, quiz dan post
+-Setting Waktu Saat test, (tanggal, bulan, tahun) 
+-saat telah, dia tetap bisa mengikuti tes, tapi ada tanda telat (merah)
+-score dia kita bisa setting sesuai soal
+-Generalisasi courses dari Prodi -> Mata pelatihan -> perkelas(perkelas akan dibuat oleh instruktur masing-masing)
+-Pada quiz, sebelum di submit, bisa direview.
+-saat terjadi error koneksi, masih bisa masuk ke test,tergantung pemberian dari instruktur
+-ada time limit: di set oleh pembuat quiz. dalam jam.
+-jika student submit sebelum due date, masih bisa di edit jawabannya. kalau due date, tidak bisa
+-notifikasi pada student dan instructor
+-kolom daftar secara umum student dan instructur.
+-Instructor field signup: email->username, password, nama , dob, hp, Pilihan Monarch. 
+-autorisasi email pada instruktur
+-Student field : email, password, nama , dob, hp, monarch.
+-superuser pada elearning
+-instructor bisa delete murid yang masuk kekelasnya
+-statistik student dan lecturer
+-Pemberian bintang BRIGHT pada Post. Pemberian Badges pada student (LIST BADGES)
+-Pemberian komen oleh instructor pada Quiz dan Assignment
+-Pada profile -> Email, Nama, HP, Photo Profile, Motto masing masing. 
+-Penambahan Additional Material
+-#00BCD4 ganti warna
+
+-Pembuatan rating pada instructor 
+-pada home dibuatkan best instructor berdasarkan pada rating yang telah diberikan oleh mahasiswa
+-best instructor akan dilakukan pada setiap minggu/setiap bulan (choose)
+-Ketua Yayasan atau Managing Director dapat memberikan ucapan selamat pada pemenang
+-Pemenang akan terus tampil pada home, namun yang terbaru akan selalu tampil yang paling pertama
+-Membuat Product profile yang berisi deskripsi tentang elearning, keunikannya, SWOT
+-Membuat action plan/strategi untuk sosialisasi
+-Membuat cover photo untuk announcement pada sosmed
+-connect pada instructor evaluation
+-menjadi dasar appraisal instructor dan best instructor pada monarch award
