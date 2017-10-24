@@ -18,14 +18,19 @@ if(isset($_POST['login-btn'])){
 			if($_SESSION['e_level']=="1"){
 				echo "<script>
 					location.href='lecturer/';
-				</script>";	
+				</script>";
+			}
+      elseif($_SESSION['e_level']=="2"){
+				echo "<script>
+					location.href='student/';
+				</script>";
 			}
 			else{
 				echo "<script>
-					location.href='student/';
-				</script>";	
+					location.href='admin/';
+				</script>";
 			}
-			
+
 			//header('location:results.php');
 		}
 		else{
@@ -34,7 +39,7 @@ if(isset($_POST['login-btn'])){
 			</script>";
 		}
 	}
-	
+
 if(isset($_POST['logout-btn'])){
 	unset($_SESSION['e_level']);
 	unset($_SESSION['e_username']);
@@ -70,4 +75,4 @@ if(isset($_POST['change-btn'])){
 }
 
 $conn->close();
-?> 
+?>

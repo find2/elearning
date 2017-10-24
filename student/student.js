@@ -29,25 +29,22 @@ function enrollment(){
 }
 
 function enroll_class(){
-	var code = $("#code").val();
-	code = code.trim();
+	var id_class = $("#code").val();
+	id_class = id_class.trim();
 	var password = $("#password").val();
 	password = password.trim();
-	var class_name = 'HK5'; // Input User
+	var class_name = $("#code option:selected").text();
 	$.post("php/enroll_class_validate.php", {
-		code:code,
-		password:password,
-		class_name:class_name
+		id_class:id_class,
+		password:password
 	}, function (data, status) {
 		$("#enroll_modal").modal("hide");
 		if(data==1)
-			alert("Enrolled to Subject "+code+".");
-		else if(data==0)
-			alert("Failed to enroll.");
-		else if(data==3)
-			alert("Class already created.");
+			alert("Enrolled to Subject "+class_name+".");
 		else if(data==2)
-			alert("You Done.");
+			alert("Already Enrolled Subject "+class_name+".");
+		else
+			alert("Failed to enroll.");
 		enrollment();
 	});
 }
@@ -99,55 +96,43 @@ function post_comment(id){
 
 	var comment = $("#t_"+id).val();
 	comment = comment.trim();
-		if (comment == "") {
-		}
-		else {
-				$.post("php/post_comment.php", {
-					comment:comment,
-					post_id:id
-				}, function (data, status) {
-					$("#t_"+id).val("");
-					show_post();
-					//post_id=0;
-				});
-		}
-	//home();
+	if (comment == "") {
+		console.log("NULL");
+	}
+	else {
+		$.post("php/post_comment.php", {
+			comment:comment,
+			post_id:id
+		}, function (data, status) {
+			$("t_"+id).val("");
+			//post_id=0;
+			show_post();
+		});
+	}
+//home();
 }
 
-function delete_post(id){
-   var conf = confirm("Delete this post?");
-    if (conf == true) {
-        $.post("php/post_delete.php", {
-                id: id
-            },
-            function (data, status) {
-                home();
-            }
-        );
-    }
-}
+/*function post_comment(event){
+	var x = event.which;
+	if(x==13){
+		$(".box-footer").activateBox();
 
-function posting(){
-	var description=$( "#editor" ).html();
-	description=description.trim();
-	var post_to=$('#code').val();
-	post_to=post_to.trim();
-
-	if (description=="" && post_to=="") {
-
-    }
-    else {
-        $.post("php/post_content.php", {
-			description:description,
-			post_to:post_to
-        }, function (data, status) {
-
-			$("#title").val("");
-			post();
-        });
-    }
-	//home();
-}
+		var comment = $("#t_"+post_id).val();
+		comment = comment.trim();
+	    if (comment == "") {
+	    }
+	    else {
+	        $.post("php/post_comment.php", {
+				comment:comment,
+				post_id:post_id
+	        }, function (data, status) {
+				$("#comment-box").val("");
+				post_id=0;
+	        });
+	    }
+		//home();
+	}
+}*/
 
 /*function set_post_id(id){
 	post_id=id;
@@ -310,10 +295,8 @@ function create_quiz(){
 function show_question(){
 	var quiz_id = $("#quiz_code").val();
 	quiz_id = quiz_id.trim();
-	var quiz_name = $("#quiz_code option:selected").text();
 	$.post("php/quiz_question.php", {
 		quiz_id:quiz_id,
-		quiz_name:quiz_name
 	}, function (data, status) {
 		$("#quiz_content").html(data);
 	});

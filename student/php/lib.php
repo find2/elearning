@@ -113,13 +113,6 @@ class CRUD
         return $data;
     }
 
-    public function Delete_Post($id)
-    {
-        $query = $this->db->prepare("DELETE FROM posts WHERE id = :id");
-        $query->bindParam("id", $id, PDO::PARAM_STR);
-        $query->execute();
-    }
-
     public function Read_Comment($id, $monarch){
         $query = $this->db->prepare("SELECT users.username AS username, coment.date_created AS date_created, coment.description AS content, coment.id AS coment_id FROM coment, users
         	 WHERE id_posts= :id AND users.monarch= :monarch AND coment.id_user=users.id ORDER BY coment.date_created");
@@ -138,17 +131,17 @@ class CRUD
           	 WHERE users.username= :username AND class.monarch= :monarch AND enrolled_user.id_user=users.id AND enrolled_user.id_class=class.id");
   		$query->bindParam("username", $username, PDO::PARAM_STR);
       $query->bindParam("monarch", $monarch, PDO::PARAM_STR);
-      $query->execute();
-      $codes = array();
-      while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
-          $codes[] = $row;
-      }
-      $data_code="";
-      if(count($codes)>0){
-        foreach($codes as $code){
-          $data_code.='<option value="'. $code['id'] .'"">'. $code['class_name'] .'</option>';
-        }
-      }
+          $query->execute();
+          $codes = array();
+          while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
+              $codes[] = $row;
+          }
+          $data_code="";
+          if(count($codes)>0){
+          	foreach($codes as $code){
+          		$data_code.='<option value="'. $code['id'] .'"">'. $code['class_name'] .'</option>';
+          	}
+          }
     	$data='
 			<section class="content-header">
 				<h1>
@@ -158,8 +151,7 @@ class CRUD
 
 				</br>
 				<div class="pull-left">
-					<button class="btn btn-success btn-md" data-toggle="modal" data-target="#create_post_modal">Create Post</button>
-          <label for="code_class">Post to Subject:</label>
+					<label for="code_class">Choose Subject:</label>
           <select name="code_class" id="code_class" class="form-control" onchange="show_post()">
             <option value="">Choose Subject:</option>
             '. $data_code .'
@@ -214,17 +206,6 @@ class CRUD
         return $this->db->lastInsertId();
 	}
 
-	public function Write_Post($description, $id_class, $date_created, $id_user){
-		$query = $this->db->prepare("INSERT INTO posts (description, id_class, date_created, id_user)
-			VALUES (:description, :id_class, :date_created, :id_user)");
-        $query->bindParam("description", $description, PDO::PARAM_STR);
-        $query->bindParam("id_class", $id_class, PDO::PARAM_STR);
-        $query->bindParam("id_user", $id_user, PDO::PARAM_STR);
-        $query->bindParam("date_created", $date_created, PDO::PARAM_STR);
-        $query->execute();
-        return $this->db->lastInsertId();
-	}
-
 	public function Comment_Post($username, $date_created, $description, $post_id){
 		$data='
 						<div class="box-footer box-comments">
@@ -271,7 +252,21 @@ class CRUD
 	//---------------------------Start Enroll------------------------------------------
 
 	//---------------------------End Enroll------------------------------------------
-	public function Enroll_Modal(){
+	public function Enroll_Modal($monarch){
+    $query = $this->db->prepare("SELECT class.id AS id, class.class_name AS class_name FROM users, class
+           WHERE class.monarch= :monarch AND class.id_user=users.id ORDER BY class.class_name ASC");
+    $query->bindParam("monarch", $monarch, PDO::PARAM_STR);
+    $query->execute();
+    $codes = array();
+    while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
+        $codes[] = $row;
+    }
+    $data_code="";
+    if(count($codes)>0){
+      foreach($codes as $code){
+        $data_code.='<option value="'. $code['id'] .'"">'. $code['class_name'] .'</option>';
+      }
+    }
 		$data='
 		<div class="modal fade" id="enroll_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
 		    <div class="modal-dialog" role="document">
@@ -283,7 +278,10 @@ class CRUD
 		            <div class="modal-body">
 						<div class="form-group">
 							<label for="code">Code Subject:</label>
-							<input type="text" id="code" placeholder="Code Subject" class="form-control"/>
+              <select name="code" id="code" class="form-control">
+                <option value="">Choose Subject:</option>
+                '. $data_code .'
+              </select>
 						</div>
 						<div class="form-group">
 							<label for="password">Enrollment Key:</label>
@@ -338,7 +336,6 @@ class CRUD
 		</br>
 			<div class="pull-left">
 				<button class="btn btn-success btn-md" data-toggle="modal" data-target="#enroll_modal">Enroll To Class</button>
-				<button class="btn btn-success btn-md" data-toggle="modal" data-target="#create_class_modal">Create Class</button>
 			</div>
 		</br></br>
 		<div class="row text-center"><h2> Class That You Already Enrolled:</h2></div>
@@ -412,9 +409,9 @@ class CRUD
         return $this->db->lastInsertId();
     }
 
-    public function Enroll_Class_Validate($code, $password, $username, $class_name, $monarch){
-        $query = $this->db->prepare("SELECT code FROM enroll WHERE code= :code AND password= :password");
-		$query->bindParam("code", $code, PDO::PARAM_STR);
+    public function Enroll_Class_Validate($enroll_id, $password, $username, $id_class, $monarch){
+        $query = $this->db->prepare("SELECT code FROM enroll WHERE id= :id AND password= :password");
+		$query->bindParam("id", $enroll_id, PDO::PARAM_STR);
 		$query->bindParam("password", $password, PDO::PARAM_STR);
         $query->execute();
         $data = array();
@@ -424,34 +421,22 @@ class CRUD
         if(count($data)>0){
         	$result= "1";//Belum Enroll
 
-        	$query2 = $this->db->prepare("SELECT users.username AS username, enroll.code AS code FROM enrolled_user, users, enroll WHERE enroll.code= :code2 AND users.username= :username AND enrolled_user.id_user=users.id AND enrolled_user.id_enroll=enroll.id");
-			$query2->bindParam("code2", $code, PDO::PARAM_STR);
+        	$query2 = $this->db->prepare("SELECT users.username AS username, enroll.code AS code, class.class_name AS class_name FROM enrolled_user, users, enroll, class WHERE enrolled_user.id_enroll= :id_enroll AND users.username= :username AND enrolled_user.id_class = :id_class AND enrolled_user.monarch= :monarch AND enrolled_user.id_user=users.id AND enrolled_user.id_enroll=enroll.id AND enrolled_user.id_class=class.id");
+			$query2->bindParam("id_enroll", $enroll_id, PDO::PARAM_STR);
 			$query2->bindParam("username", $username, PDO::PARAM_STR);
+      $query2->bindParam("id_class", $id_class, PDO::PARAM_STR);
+      $query2->bindParam("monarch", $monarch, PDO::PARAM_STR);
 	        $query2->execute();
 	        $data2 = array();
 	        while ($row2 = $query2->fetch(PDO::FETCH_ASSOC)) {
 	            $data2[] = $row2;
 	        }
 	        if(count($data2)>0){
-	        	$result= "2"; // already enroll belum ad kelas
-	        	$query3 = $this->db->prepare("SELECT users.username AS username, class.class_name AS class_name, class.monarch AS monarch FROM enrolled_user, users, class WHERE class.class_name= :class_name AND users.username= :username AND enrolled_user.monarch= :monarch AND enrolled_user.id_user=users.id AND enrolled_user.id_class=class.id");
-				$query3->bindParam("class_name", $class_name, PDO::PARAM_STR);
-				$query3->bindParam("username", $username, PDO::PARAM_STR);
-				$query3->bindParam("monarch", $monarch, PDO::PARAM_STR);
-		        $query3->execute();
-		        $data3 = array();
-		        while ($row3 = $query3->fetch(PDO::FETCH_ASSOC)) {
-		            $data3[] = $row3;
-		        }
-		        if(count($data3)>0)
-		        	$result= "3"; // sudah ada kleas sudah enroll
-		        else
-		        	$result= "1"; // belum enroll belum ada kelas
+	        	$result= "2"; // already enroll
 	        }
-
         }
         else
-        	$result= "0";
+        	$result= "0"; // Password Salah
         return $result;
     }
 
@@ -512,6 +497,20 @@ class CRUD
         $query->bindParam("id", $id, PDO::PARAM_STR);
         $query->execute();
     }
+
+    public function Get_Enroll_Id($class_code){
+        $query = $this->db->prepare("SELECT id_enroll, class_name FROM class
+        	 WHERE id= :id_class");
+		$query->bindParam("id_class", $class_code, PDO::PARAM_STR);
+        $query->execute();
+        $data = array();
+        while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
+            $data[] = $row;
+        }
+        return $data;
+    }
+
+
 
     //ENROLL END
 
@@ -932,7 +931,7 @@ class CRUD
 	}
 
   // Dipanggil dari lecture.js funtion show_question
-	public function Show_Quiz_Question($quiz_id, $quiz_name){
+	public function Show_Quiz_Question($quiz_id){
         $data='<label><h4>Question</h4></label>';
         $query = $this->db->prepare("SELECT quiz.id AS quiz_id, quiz.quiz_name AS quiz_name, qa_mc_quiz.question_number AS question_number_mc, qa_mc_quiz.question_mc, mc_quiz.answer_a, mc_quiz.answer_b, mc_quiz.answer_c, mc_quiz.answer_d FROM quiz, qa_mc_quiz, mc_quiz WHERE quiz.id= :quiz_id AND qa_mc_quiz.id_quiz=quiz.id AND mc_quiz.id_qa_mc_quiz=qa_mc_quiz.id GROUP BY qa_mc_quiz.question_number");
 		$query->bindParam("quiz_id", $quiz_id, PDO::PARAM_STR);
@@ -941,7 +940,7 @@ class CRUD
         while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
             $mc_quiz[] = $row;
         }
-        $data_code='<h2>'. $quiz_name .'</h2>';
+        $data_code='';
         if(count($mc_quiz)>0){
           $data_code.='<h4>Multiple Choice</h4>';
         	foreach($mc_quiz as $mc){

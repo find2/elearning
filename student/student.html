@@ -1,0 +1,38 @@
+Login Student
+  redirect page ke student/ ( 0 untuk admin, 1 untuk lecturer, 2 untuk student) /done
+
+Enrollment
+  -Showing modal /Done
+  -didalam modal student input = class_name, password -> where monarch sama dengan session student /Done
+  -setelah di input, insert ke tb enrolled_user /Done
+
+Show enrolled class
+  -Sama dengan fitur di lecturer /Done
+
+Showing Post
+  -Sama dengan di lecturer, tampilkan sesuai dengan kondisi enrolled_user dan monarch /Done
+  -student tidak bisa posting, hanya bisa comment /Done
+
+Comment Post
+  - pada textarea di beri id = t_(id_post) dan pada button post comment diberi id = b_(id_post) /Done
+  - sewaktu comment telah diketik ( kondisi tidak boleh null), dan button onclick, masuk ke function post_comment(id_post) /Done
+  - pada post_comment function ambil value yang di parsing (id_post) lalu ambil textarea dengan id t_(id_post) sebagai description /Done
+  - 2 value akan di parsing ke php dengan post, description dan id_post /Done
+  - proses ke post_comment.php, insert value sesuai dengan table comment(rename coment -> comment) /kata comment termasuk dlam variable mysql
+
+Quiz
+  - buat table attempt_quiz(id, id_quiz=int, id_users=int, attempt=int, is_scored=int ), buat table score_quiz (id, id_attempt_quiz=int, score_mc, score_essay)
+  - dimana foreign key attempt_quiz.id = score_quiz.id_attempt_quiz /Done
+
+  - student mempunyai 3x attempt(kesempatan) untuk mengikuti 1 quiz
+  - Show Available quiz button, saat quiz di click, menampilkan modal dengan dropdown pilihan enrolled_class.
+  - Setelah enrolled class di click, onChange menampilkan quiz yang tersedia, dan mengambil value id_quiz dan disimpan dalam input type hidden
+  - Button show pada modal di click, memproses beberapa kondisi:
+    a. di cek pada attempt_quiz table, jika tidak terdapat value yang sama dengan  id_quiz dan id_users, lakukan insert row baru dengan nilai attempt = 1
+    b. jika saat di cek terdapat value yang sama dengan id_quiz dan id_users, lakukan update pada attempt_quiz dengan mengambil nilai attempt +1
+    c. jika saat di cek terdapat value yang sama dengan id_quiz dan id_users dan attempt memiliki nilai = 3, memberikan pemberitahuan tidak bisa mengikuti test
+    d. jika is_score=1, siswa tidak bsa update quiz
+  - saat kondisi a dan b diatas terpenuhi, menampilkan soal yang terdapat pada table quiz, dan menampilkan nilai attempt saat ini dan sisa attempt
+  - pada saat tombol submit question di submit, melakukan kalkulasi sesuai dengan kunci jawaban (terkecuali essay) dan di proses ke js dan php, dengan kondisi:
+    a. jika memenuhi poin a diatas, akan melakukan insert row baru pada table score_quiz
+    b. jika memenuhi poin b diatas, akan melakukan update value sesuai dengan id_attempt_quiz
