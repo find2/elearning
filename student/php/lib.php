@@ -114,8 +114,8 @@ class CRUD
     }
 
     public function Read_Comment($id, $monarch){
-        $query = $this->db->prepare("SELECT users.username AS username, coment.date_created AS date_created, coment.description AS content, coment.id AS coment_id FROM coment, users
-        	 WHERE id_posts= :id AND users.monarch= :monarch AND coment.id_user=users.id ORDER BY coment.date_created");
+        $query = $this->db->prepare("SELECT users.username AS username, comment_tb.date_created AS date_created, comment_tb.description AS content, comment_tb.id AS comment_id FROM comment_tb, users
+        	 WHERE id_posts= :id AND users.monarch= :monarch AND comment_tb.id_user=users.id ORDER BY comment_tb.date_created");
 		$query->bindParam("id", $id, PDO::PARAM_STR);
     $query->bindParam("monarch", $monarch, PDO::PARAM_STR);
         $query->execute();
@@ -196,7 +196,7 @@ class CRUD
 	}
 
 	public function Write_Comment($posts_id, $user_id, $date_created, $desciption){
-		$query = $this->db->prepare("INSERT INTO coment (description, id_user, id_posts, date_created)
+		$query = $this->db->prepare("INSERT INTO comment_tb (description, id_user, id_posts, date_created)
 			VALUES (:description, :id_user, :id_post, :date_created)");
         $query->bindParam("description", $desciption, PDO::PARAM_STR);
         $query->bindParam("id_user", $user_id, PDO::PARAM_STR);
@@ -658,7 +658,7 @@ class CRUD
         	$total_question.='<option value="'. $i .'">'. $i .'</option>';
 
 		$data='
-		<div class="modal fade" id="quiz_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+		<!--<div class="modal fade" id="quiz_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
 		    <div class="modal-dialog" role="document">
 		        <div class="modal-content">
 		            <div class="modal-header">
@@ -708,14 +708,14 @@ class CRUD
 		            </div>
 		        </div>
 		    </div>
-		</div>
+		</div>-->
 		<h1>
 			Quiz
 			<small></small>
 		</h1>
 		</br>
 			<div class="pull-left">
-				<button class="btn btn-success btn-md" data-toggle="modal" data-target="#quiz_modal">Create Quiz</button>
+				<!--<button class="btn btn-success btn-md" data-toggle="modal" data-target="#quiz_modal">Create Quiz</button>-->
 				<button class="btn btn-success btn-md" data-toggle="modal" data-target="#show_quiz_modal">Show Quiz</button>
 			</div>
 		</br></br>
@@ -833,6 +833,9 @@ class CRUD
         return $this->db->lastInsertId();
 	}
 
+  /*
+    Mengecek apakah nama quiz sudah ada enroll dan monarch yang sma
+  */
 	public function Validate_Quiz($quiz_name, $class_id, $monarch){
 		$query = $this->db->prepare("SELECT quiz_name, id_class FROM quiz WHERE quiz_name= :quiz_name AND id_class= :id_class AND monarch= :monarch");
 		$query->bindParam("quiz_name", $quiz_name, PDO::PARAM_STR);
@@ -889,7 +892,7 @@ class CRUD
 								</div>
 								<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
 									<label for="quiz_code">Quiz Name</label>
-									<select name="quiz_code" id="quiz_code" class="form-control" required >
+									<select name="quiz_code" id="quiz_code" class="form-control" onchange="set_id_quiz()" required >
 										<option value="">--</option>
 									</select>
 								</div>
@@ -901,17 +904,28 @@ class CRUD
 		            <div class="modal-footer">
 		                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 		                <button type="button" class="btn btn-primary" onclick="show_question()">Show</button>
+                    <button type="button" class="btn btn-success" onclick="submit_question()">Submit</button>
 		            </div>
 		        </div>
 		    </div>
 		</div>
+    <h1>
+			Quiz
+			<small></small>
+		</h1>
+		</br>
+			<div class="pull-left">
+				<!--<button class="btn btn-success btn-md" data-toggle="modal" data-target="#quiz_modal">Create Quiz</button>-->
+				<button class="btn btn-success btn-md" data-toggle="modal" data-target="#show_quiz_modal">Show Quiz</button>
+			</div>
+		</br></br>
 		';
 
 
 	return $data;
 	}
 
-  // Dipanggil dari lecture.js funtion set_quiz_question
+  // Dipanggil dari student.js funtion set_quiz_question
 	public function Set_Quiz_Question($class_id){
 		$query = $this->db->prepare("SELECT id, quiz_name FROM quiz
         	 WHERE id_class= :id_class");
@@ -924,14 +938,14 @@ class CRUD
         $data_code='<option value="">--</option>';
         if(count($codes)>0){
         	foreach($codes as $code){
-        		$data_code.='<option value="'. $code['id'] .'"">'. $code['quiz_name'] .'</option>';
+            $data_code.='<option value="'. $code['id'] .'"">'. $code['quiz_name'] .'</option>';
         	}
         }
         return $data_code;
 	}
 
-  // Dipanggil dari lecture.js funtion show_question
-	public function Show_Quiz_Question($quiz_id){
+  // Dipanggil dari student.js funtion show_question
+	public function Show_Quiz_Question($attempt, $quiz_id, $quiz_name){
         $data='<label><h4>Question</h4></label>';
         $query = $this->db->prepare("SELECT quiz.id AS quiz_id, quiz.quiz_name AS quiz_name, qa_mc_quiz.question_number AS question_number_mc, qa_mc_quiz.question_mc, mc_quiz.answer_a, mc_quiz.answer_b, mc_quiz.answer_c, mc_quiz.answer_d FROM quiz, qa_mc_quiz, mc_quiz WHERE quiz.id= :quiz_id AND qa_mc_quiz.id_quiz=quiz.id AND mc_quiz.id_qa_mc_quiz=qa_mc_quiz.id GROUP BY qa_mc_quiz.question_number");
 		$query->bindParam("quiz_id", $quiz_id, PDO::PARAM_STR);
@@ -940,12 +954,21 @@ class CRUD
         while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
             $mc_quiz[] = $row;
         }
-        $data_code='';
+        $total_mc=0;
+        $total_essay=0;
+        $remaining=3-$attempt;
+        $data_code='<h2>'. $quiz_name .'</h2>
+                    <p>Attempt: '. $attempt .'</p>
+                    <p>Remaining: '. $remaining .'</p>';
         if(count($mc_quiz)>0){
           $data_code.='<h4>Multiple Choice</h4>';
         	foreach($mc_quiz as $mc){
         		$data_code.='<p>'. $mc['question_number_mc'] . $mc['question_mc'] .'</p>
-        					<p>'. $mc['answer_a'] .'  '. $mc['answer_b'] .'  '. $mc['answer_c'] .'  '. $mc['answer_d'] .'</p>';
+            <label><input type="radio" name="answer_'. $mc['question_number_mc'] .'" value="a">'. $mc['answer_a'] .'</label>
+            <label><input type="radio" name="answer_'. $mc['question_number_mc'] .'" value="b">'. $mc['answer_b'] .'</label>
+            <label><input type="radio" name="answer_'. $mc['question_number_mc'] .'" value="c">'. $mc['answer_c'] .'</label>
+            <label><input type="radio" name="answer_'. $mc['question_number_mc'] .'" value="d">'. $mc['answer_d'] .'</label>';
+            $total_mc++;
         	}
         }// End Multiple Choice
         // Start Essay
@@ -960,10 +983,172 @@ class CRUD
           $data_code.='<h4>Essay</h4>';
         	foreach($essay_quiz as $essay){
         		$data_code.='<p>'. $essay['question_number_essay'] . $essay['question_essay'] .'</p>';
+            $total_essay++;
         	}
         }// End Essay
+        $data_code.='<input type="hidden" id="total_mc" value="'. $total_mc .'">
+        <input type="hidden" id="total_essay" value="'. $total_essay .'">';
 		return $data_code;
 	}
+
+  /*
+    Digunakan utk melakukan validasi apakah student sudah mencoba mnjawb quiz sbnyak 3x ato belum
+  */
+  public function Validate_Qiuz_Attempt($quiz_id, $user_id){
+    $query = $this->db->prepare("SELECT attempt, is_scored FROM attempt_quiz WHERE id_quiz= :quiz_id AND id_user= :user_id");
+    $query->bindParam("quiz_id", $quiz_id, PDO::PARAM_STR);
+    $query->bindParam("user_id", $user_id, PDO::PARAM_STR);
+    $query->execute();
+    $quizes = array();
+    while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
+        $quizes[] = $row;
+    }
+    if (count($quizes)>0) {
+      foreach ($quizes as $quiz) {
+        if($quiz['attempt']>=3 || $quiz['is_scored']==1){
+          $result= "2"; // Tidak bisa mnjwab soal
+        }
+        else{
+          $result= "1"; // sudah mnjawab soal tetapi msih memliki ksmpatan
+        }
+      }
+    }
+    else{
+      $result= "0"; // belum prnah mnjwab soal
+    }
+
+    return $result;
+  }
+
+  // Untk menmbahkan row baru pada attempt_quiz jika student belum prnah sma skli mnjawab soal tersbut
+  public function Insert_Attempt($quiz_id, $user_id, $attempt, $is_scored){
+    $query = $this->db->prepare("INSERT INTO attempt_quiz (id_quiz, id_user, attempt, is_scored)
+			VALUES (:id_quiz, :id_user, :attempt, :is_scored)");
+        $query->bindParam("id_quiz", $quiz_id, PDO::PARAM_STR);
+        $query->bindParam("id_user", $user_id, PDO::PARAM_STR);
+        $query->bindParam("attempt", $attempt, PDO::PARAM_STR);
+        $query->bindParam("is_scored", $is_scored, PDO::PARAM_STR);
+        $query->execute();
+        return $this->db->lastInsertId();
+  }
+
+  /*
+    Digunakan saat siswa msh memiliki ksmpatan utk mnjawab soal. Dan akan melakukan update attemt pada attempt quiz table utk siswa yg msh bsa mnjawab.
+  */
+  public function Update_Attempt($attempt, $id_quiz, $id_user){
+    $attempt += 1;
+    $query = $this->db->prepare("UPDATE attempt_quiz SET attempt= :attempt WHERE id_quiz= :id_quiz AND id_user= :id_user");
+        $query->bindParam("attempt", $attempt, PDO::PARAM_STR);
+        $query->bindParam("id_user", $id_user, PDO::PARAM_STR);
+        $query->bindParam("id_quiz", $id_quiz, PDO::PARAM_STR);
+        $query->execute();
+  }
+
+  /*
+    Mendpatkan nilai attempt sesuai dngan user id dan quiz id
+  */
+  public function Get_Attempt($quiz_id, $user_id){
+    $query = $this->db->prepare("SELECT attempt FROM attempt_quiz WHERE id_quiz= :quiz_id AND id_user= :user_id");
+    $query->bindParam("quiz_id", $quiz_id, PDO::PARAM_STR);
+    $query->bindParam("user_id", $user_id, PDO::PARAM_STR);
+    $query->execute();
+    $datas = array();
+    while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
+        $datas[] = $row;
+    }
+    if (count($datas)>0) {
+      foreach ($datas as $data) {
+        $attempt=$data['attempt'];
+      }
+    }
+    return $attempt;
+  }
+
+ /*
+  Mendapatkan id_attempt yg digunakan untuk mnympan dan menvalidasi score
+ */
+  public function Get_Id_Attempt($quiz_id, $user_id){
+    $query = $this->db->prepare("SELECT id FROM attempt_quiz WHERE id_quiz= :quiz_id AND id_user= :user_id");
+    $query->bindParam("quiz_id", $quiz_id, PDO::PARAM_STR);
+    $query->bindParam("user_id", $user_id, PDO::PARAM_STR);
+    $query->execute();
+    $datas = array();
+    while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
+        $datas[] = $row;
+    }
+    if (count($datas)>0) {
+      foreach ($datas as $data) {
+        $id_attempt=$data['id'];
+      }
+    }
+    return $id_attempt;
+  }
+
+  /*
+    Menbandingkan jawaban yg djwab student dngan knci jawaban
+  */
+  public function Get_Answer($quiz_id, $mc_number, $answer){
+    $query = $this->db->prepare("SELECT answer_mc FROM qa_mc_quiz WHERE id_quiz= :quiz_id AND question_number= :mc_number");
+    $query->bindParam("quiz_id", $quiz_id, PDO::PARAM_STR);
+    $query->bindParam("mc_number", $mc_number, PDO::PARAM_STR);
+    $query->execute();
+    $datas = array();
+    while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
+        $datas[] = $row;
+    }
+    $result=0; // Jika jawaban berbeda dengan knci
+    if (count($datas)>0) {
+      foreach ($datas as $data) {
+        if($data['answer_mc']==$answer){
+          $result=1; // jika jawaban sama dengan kunci
+        }
+      }
+    }
+    return $result;
+  }
+
+  /*
+    Menympan nilai yg diperoleh student jika belum perna mensubmit jawaban seblumnya
+  */
+  public function Save_Score($id_attempt, $total_score_mc, $total_score_essay){
+    $query = $this->db->prepare("INSERT INTO score_quiz (id_attempt_quiz, score_mc, score_essay)
+			VALUES (:id_attempt_quiz, :score_mc, :score_essay)");
+        $query->bindParam("id_attempt_quiz", $id_attempt, PDO::PARAM_STR);
+        $query->bindParam("score_mc", $total_score_mc, PDO::PARAM_STR);
+        $query->bindParam("score_essay", $total_score_essay, PDO::PARAM_STR);
+        $query->execute();
+        return $this->db->lastInsertId();
+  }
+
+  /*
+    Mencocokan apakah student sudah prnah mensubmit jawaban ato belum
+  */
+  public function Validate_Score($id_attempt){
+    $query = $this->db->prepare("SELECT score_mc, score_essay FROM score_quiz WHERE id_attempt_quiz= :id_attempt");
+    $query->bindParam("id_attempt", $id_attempt, PDO::PARAM_STR);
+    $query->execute();
+    $attempts = array();
+    while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
+        $attempts[] = $row;
+    }
+    if (count($attempts)>0)
+      $result= "1"; // Sudah pernah mensubmit jawaban
+    else
+      $result= "0"; // belum prnah mensubmit jawaban
+
+    return $result;
+  }
+
+  /*
+    Merubah nilai yg dtrma oleh student
+  */
+  public function Update_Score($id_attempt, $total_score_mc, $total_score_essay){
+    $query = $this->db->prepare("UPDATE score_quiz SET score_mc= :score_mc, score_essay= :score_essay WHERE id_attempt_quiz= :id_attempt_quiz");
+        $query->bindParam("score_mc", $total_score_mc, PDO::PARAM_STR);
+        $query->bindParam("score_essay", $total_score_essay, PDO::PARAM_STR);
+        $query->bindParam("id_attempt_quiz", $id_attempt, PDO::PARAM_STR);
+        $query->execute();
+  }
 
     //Quiz END
 }

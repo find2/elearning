@@ -121,8 +121,8 @@ class CRUD
     }
 
     public function Read_Comment($id, $monarch){
-        $query = $this->db->prepare("SELECT users.username AS username, coment.date_created AS date_created, coment.description AS content, coment.id AS coment_id FROM coment, users
-        	 WHERE id_posts= :id AND users.monarch= :monarch AND coment.id_user=users.id ORDER BY coment.date_created");
+        $query = $this->db->prepare("SELECT users.username AS username, comment_tb.date_created AS date_created, comment_tb.description AS content, comment_tb.id AS comment_id FROM comment_tb, users
+        	 WHERE id_posts= :id AND users.monarch= :monarch AND comment_tb.id_user=users.id ORDER BY comment_tb.date_created");
 		$query->bindParam("id", $id, PDO::PARAM_STR);
     $query->bindParam("monarch", $monarch, PDO::PARAM_STR);
         $query->execute();
@@ -204,7 +204,7 @@ class CRUD
 	}
 
 	public function Write_Comment($posts_id, $user_id, $date_created, $desciption){
-		$query = $this->db->prepare("INSERT INTO coment (description, id_user, id_posts, date_created)
+		$query = $this->db->prepare("INSERT INTO comment_tb (description, id_user, id_posts, date_created)
 			VALUES (:description, :id_user, :id_post, :date_created)");
         $query->bindParam("description", $desciption, PDO::PARAM_STR);
         $query->bindParam("id_user", $user_id, PDO::PARAM_STR);

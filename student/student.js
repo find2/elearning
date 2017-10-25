@@ -1,5 +1,6 @@
 var link="";
 var post_id=0;
+var quiz_id=0;
 
 function loading(){
 	$.post("php/loader.php", {
@@ -293,10 +294,11 @@ function create_quiz(){
 	Melihatkan prtanyaan yg sdah dibuat oleh lecture sesuai dengan class
 */
 function show_question(){
-	var quiz_id = $("#quiz_code").val();
-	quiz_id = quiz_id.trim();
+	var quiz_name = $("#quiz_code option:selected").text();
+	quiz_name = quiz_name.trim();
 	$.post("php/quiz_question.php", {
 		quiz_id:quiz_id,
+		quiz_name:quiz_name
 	}, function (data, status) {
 		$("#quiz_content").html(data);
 	});
@@ -313,6 +315,31 @@ function set_quiz_question(){
 	}, function (data, status) {
 		$("#quiz_code").children().remove();
 		$("#quiz_code").append(data);
+	});
+}
+
+// Digunkan utk mnmpan id_quiz
+function set_id_quiz(){
+	quiz_id = $("#quiz_code").val();
+	quiz_id = quiz_id.trim();
+}
+
+// Digunkan untuk mengumpulkan jawaban saat studen mnkan button submit
+function submit_question(){
+	var total_mc = $('#total_mc').val().trim();
+	var total_essay = $('#total_essay').val().trim();
+	var mc = new Array(total_mc);
+	//var essay = new array(total_essay);
+	for(var i=1; i<=total_mc; i++)
+	{
+		mc[i] = $('input[name=answer_'+i+']:checked').val().trim();
+	}
+	$.post("php/submit_question.php", {
+		quiz_id:quiz_id,
+		mc:mc,
+		total_mc:total_mc
+		//essay:essay
+	}, function (data, status) {
 	});
 }
 //TEST AND QUIZ END

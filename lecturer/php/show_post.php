@@ -13,7 +13,7 @@
           $comments=$object->Read_Comment($post['post_id'], $monarch);
           if(count($comments>0)){
               foreach($comments as $comment){
-                  $data.=$object->Comment_post($comment['username'], $comment['date_created'], $comment['content'], $comment['coment_id']);
+                  $data.=$object->Comment_post($comment['username'], $comment['date_created'], $comment['content'], $comment['comment_id']);
               }
           }
           $data.= $object->End_Post($post['post_id']);
